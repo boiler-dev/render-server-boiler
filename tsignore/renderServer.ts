@@ -38,7 +38,7 @@ export class RenderServer {
     response: RenderResponse = {}
   ): Promise<RenderResponse> {
     const { path } = request
-    const asset = await assetFromRequest(root, path)
+    const asset = await this.assetFromRequest(root, path)
 
     if (asset) {
       return asset
