@@ -46,7 +46,9 @@ export class RenderServer {
 
     const componentName = this.app.router.route(path)
     const bodyComponent = this.libs[componentName]
-    const headComponent = this.libs[bodyComponent.head]
+    const headComponent = this.libs[
+      bodyComponent.head || "headComponent"
+    ]
 
     const layout = await this.ssr.layout(
       headComponent,
@@ -91,9 +93,15 @@ export class RenderServer {
     const paths = await globby(glob)
 
     if (paths[0]) {
-      const mjs = await readFile(paths[0])
-
+      let mjs = (await readFile(paths[0])).toString()
       let contentType = "text/javascript"
+
+      if (ext === ".mjs") {
+        mjs = mjs.replace(
+          /^(import|export)[^"]+"[^"]+/gim,
+          str => str + ".mjs"
+        )
+      }
 
       if (ext === ".css") {
         contentType = "text/css"
@@ -134,15 +142,12 @@ export class RenderServer {
       )
 
       const subdir = type ? type.toLowerCase() + "s/" : ""
-
-      const dir = mjs ? "mjs" : "esm"
       const ext = mjs ? "mjs" : "js"
 
       promises.push(
         (async (): Promise<void> => {
           const glob = [
             paths[id],
-            dir,
             `${subdir}${name}.${ext}`,
           ].join("/")
 
