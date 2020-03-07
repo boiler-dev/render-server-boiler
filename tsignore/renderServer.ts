@@ -82,11 +82,9 @@ export class RenderServer {
       ;[, name, ext] = name.match(EXT_REGEX)
     }
 
-    const nameExt = process.env.STAGE ? "" : "-*"
-
     const glob = [
       join(root, path),
-      join(root, `${name}${nameExt}${ext}${map}`),
+      join(root, `${name}${ext}${map}`),
       join(root, `${name}.js${map}`),
     ]
 
@@ -130,19 +128,17 @@ export class RenderServer {
     const promises = []
 
     for (const id in paths) {
-      const nodeModule = paths[id].includes(
-        "/node_modules/"
-      )
+      const name = id
 
-      const mjs = process.env.STAGE || nodeModule
-      const name = mjs ? `${id}-*` : id
-
-      const type = ["Component", "Model"].find(
-        type => id.includes(type) && !mjs
+      const type = ["Component", "Model"].find(type =>
+        id.includes(type)
       )
 
       const subdir = type ? type.toLowerCase() + "s/" : ""
-      const ext = mjs ? "mjs" : "js"
+      const ext = "js"
+
+      const stage = process.env.STAGE
+      const prepend = stage !== "prod" ? `/${stage}` : ""
 
       promises.push(
         (async (): Promise<void> => {
@@ -151,9 +147,11 @@ export class RenderServer {
             `${subdir}${name}.${ext}`,
           ].join("/")
 
-          filled[id] = (await globby(glob))[0]
-            .replace(".js", ".mjs")
-            .slice(1)
+          filled[id] =
+            prepend +
+            (await globby(glob))[0]
+              .replace(".js", ".mjs")
+              .slice(1)
         })()
       )
     }
