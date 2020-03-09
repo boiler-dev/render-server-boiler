@@ -138,7 +138,8 @@ export class RenderServer {
       const ext = "js"
 
       const stage = process.env.STAGE
-      const prepend = stage !== "prod" ? `/${stage}` : ""
+      const prepend =
+        stage && stage !== "prod" ? `/${stage}` : ""
 
       promises.push(
         (async (): Promise<void> => {
