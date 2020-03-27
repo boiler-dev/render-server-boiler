@@ -97,7 +97,7 @@ export class RenderServer {
       if (ext === ".mjs") {
         mjs = mjs.replace(
           /^(import|export)[^"]+"[^"]+/gim,
-          str => str + ".mjs"
+          (str) => str + ".mjs"
         )
       }
 
@@ -130,7 +130,7 @@ export class RenderServer {
     for (const id in paths) {
       const name = id
 
-      const type = ["Component", "Model"].find(type =>
+      const type = ["Component", "Model"].find((type) =>
         id.includes(type)
       )
 
@@ -143,16 +143,20 @@ export class RenderServer {
 
       promises.push(
         (async (): Promise<void> => {
-          const glob = [
-            paths[id],
-            `${subdir}${name}.${ext}`,
-          ].join("/")
+          if (paths[id].match(/\.mjs$/)) {
+            filled[id] = prepend + paths[id].slice(1)
+          } else {
+            const glob = [
+              paths[id],
+              `${subdir}${name}.${ext}`,
+            ].join("/")
 
-          filled[id] =
-            prepend +
-            (await globby(glob))[0]
-              .replace(".js", ".mjs")
-              .slice(1)
+            filled[id] =
+              prepend +
+              (await globby(glob))[0]
+                .replace(".js", ".mjs")
+                .slice(1)
+          }
         })()
       )
     }
